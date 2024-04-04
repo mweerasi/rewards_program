@@ -131,7 +131,8 @@ class HistorySerializer(serializers.ModelSerializer):
             reward = validated_data['reward']
         ).count()
 
-        if current_claimed >= program_reward.max_claim:
+        if (program_reward.max_claim and
+                current_claimed >= program_reward.max_claim):
             raise ValueError("Max Claim Limit for reward achieved.")
 
         # Reduce point total for claiming reward
