@@ -79,5 +79,8 @@ class HistoryView(viewsets.ModelViewSet):
     queryset = History.objects.all()
     serializer_class = HistorySerializer
 
-    # Add logic to limit reward claiming to ProgramReward's max
-
+    def get_queryset(self):
+        return History.objects.filter(
+            member__memberships = self.kwargs['member_pk'],
+            reward__program_rewards__program = self.kwargs['program_pk'],
+        )

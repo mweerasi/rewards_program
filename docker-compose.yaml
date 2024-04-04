@@ -1,0 +1,20 @@
+version: '3.3'
+
+services:
+  api:
+    build: .
+    image: rewards-server
+    command:
+      - /bin/bash
+      - -c
+      - |
+        Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
+        python manage.py migrate
+        python manage.py runserver 0:8000
+    volumes:
+      - ./run:/usr/src/app/run
+    platform: linux/amd64
+    ports:
+      - 8000:8000
+    environment:
+      - DEBUG=1

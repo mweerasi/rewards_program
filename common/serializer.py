@@ -16,7 +16,14 @@ class MemberSerializer(serializers.ModelSerializer):
         model = Member
         fields = '__all__'
 
-    # If no `alias` given, use name as alias
+    def create(self, validated_data):
+        # If no alias given, use name as alias
+
+        if ('alias' not in validated_data or
+                not validated_data['alias']):
+            validated_data['alias'] = validated_data['name']
+
+        return super().create(validated_data)
 
 
 class ProgramSerializer(serializers.ModelSerializer):
@@ -47,12 +54,10 @@ class ProgramMemberSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         if ('program' not in validated_data or
                 not validated_data['program']):
-            program = Program.objects.get(
+            validated_data['program'] = Program.objects.get(
                 pk=self.context["view"].kwargs['program_pk'])
-            validated_data['program'] = program
 
         return super().create(validated_data)
-
 
 
 class ProgramRewardSerializer(serializers.ModelSerializer):
@@ -82,10 +87,18 @@ class HistorySerializer(serializers.ModelSerializer):
     member = serializers.PrimaryKeyRelatedField(read_only=True)
     reward = serializers.PrimaryKeyRelatedField(
         queryset=Reward.objects.all())
+    reward_name = serializers.SerializerMethodField(read_only=True)
+    member_name = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = History
         fields = '__all__'
+
+    def get_reward_name(self, obj: History) -> str:
+        return obj.reward.name
+
+    def get_member_name(self, obj: History) -> str:
+        return obj.member.name
 
     def create(self, validated_data):
         if ('program' not in validated_data or
@@ -94,26 +107,36 @@ class HistorySerializer(serializers.ModelSerializer):
                 pk=self.context["view"].kwargs['program_pk'])
             validated_data['program'] = program
 
-        if ('member' not in validated_data or
-                not validated_data['member']):
-            member = Member.objects.get(
-                pk=self.context["view"].kwargs['member_pk'])
-            validated_data['member'] = member
 
-        # Reduce point total for claiming reward
-        # Skipping server-side check for point total > 0
-        validated_data['value'] = ProgramReward.objects.get(
+        program_reward = ProgramReward.objects.get(
             program=validated_data['program'],
             reward=validated_data['reward'],
-        ).cost
+        )
 
         program_member = ProgramMembership.objects.get(
-            program=validated_data['program'],
-            member=validated_data['member'],
+            pk=self.context["view"].kwargs['member_pk'],
         )
+
+        if ('member' not in validated_data or
+                not validated_data['member']):
+            validated_data['member'] = program_member.member
+
+        if ('value' not in validated_data or
+                not validated_data['value']):
+            validated_data['value'] = program_reward.cost
+
+        # Check if member claim limit reached
+        current_claimed = History.objects.filter(
+            member = validated_data['member'],
+            reward = validated_data['reward']
+        ).count()
+
+        if current_claimed >= program_reward.max_claim:
+            raise ValueError("Max Claim Limit for reward achieved.")
+
+        # Reduce point total for claiming reward
         program_member.points = F("points") - validated_data['value']
         program_member.save()
 
         validated_data.pop('program')
-
         return super().create(validated_data)

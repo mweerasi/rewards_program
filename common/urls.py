@@ -19,7 +19,7 @@ program_router.register(
 program_member_router = routers.NestedSimpleRouter(
     program_router, r'members', lookup='member')
 program_member_router.register(
-    r'member_rewards', views.HistoryView)
+    r'history', views.HistoryView)
 
 urlpatterns = [
     path('', include(router.urls)),
