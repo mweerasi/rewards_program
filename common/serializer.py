@@ -18,7 +18,6 @@ class MemberSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         # If no alias given, use name as alias
-
         if ('alias' not in validated_data or
                 not validated_data['alias']):
             validated_data['alias'] = validated_data['name']
