@@ -1,4 +1,4 @@
-# rewards_program
+# Rewards Program
 Django application for a basic rewards program
 
 ## Deployment locally
