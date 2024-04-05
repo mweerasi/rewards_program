@@ -53,7 +53,8 @@ pip install -r requirements.txt`
 ```
 
 Run the server with:
-```python manage.py runeserver
+```
+python manage.py runserver
 ```
 
 
