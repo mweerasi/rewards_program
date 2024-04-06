@@ -114,3 +114,7 @@ The project defines the following URL patterns:
 - `/programs/{program_pk}/members/`: Routes to the ProgramMembersView.
 - `/programs/{program_pk}/rewards/`: Routes to the ProgramRewardsView.
 - `/programs/{program_pk}/members/{member_pk}/history/`: Routes to the HistoryView.
+
+## Frontend Client
+An associated React-based frontend client can be found here: 
+[rewards_client](https://github.com/mweerasi/rewards_client)
